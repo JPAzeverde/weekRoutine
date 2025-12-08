@@ -1,0 +1,371 @@
+:root {
+    /* Paleta de Cores Dark Mode */
+    --bg-app: #121212;
+    --bg-surface: #1E1E1E;
+    --bg-surface-hover: #2C2C2C;
+    --text-primary: #E0E0E0;
+    --text-secondary: #A0A0A0;
+    --border-color: #333333;
+    
+    /* Cores de Destaque */
+    --primary-color: #7C4DFF; /* Roxo vibrante */
+    --primary-hover: #651FFF;
+    --danger-color: #FF5252;
+    
+    /* Cores de Categoria (Pastel/Neon suave para dark mode) */
+    --cat-work: #448AFF;      /* Azul */
+    --cat-personal: #69F0AE;  /* Verde */
+    --cat-health: #FF4081;    /* Rosa */
+    --cat-study: #FFD740;     /* Amarelo */
+
+    /* Dimensões Críticas */
+    --hour-height: 180px; /* 60 min * 3px */
+    --sidebar-width: 60px;
+    --header-height: 70px;
+}
+
+/* Reset e Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    overflow: hidden; /* App estilo desktop */
+}
+
+h1, h2, h3, .day-header {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+}
+
+/* Container Principal */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Header */
+.app-header {
+    height: var(--header-height);
+    background-color: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10;
+}
+
+.app-title {
+    font-size: 2rem;
+    background: linear-gradient(45deg, var(--primary-color), #00BCD4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Botões */
+button {
+    cursor: pointer;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.6rem 1.2rem;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: var(--bg-surface-hover);
+    color: var(--text-primary);
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    border: 1px solid var(--border-color);
+}
+
+.btn-danger {
+    background-color: transparent;
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+    padding: 0.6rem 1.2rem;
+}
+
+.btn-danger:hover {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+/* Área do Calendário */
+.calendar-wrapper {
+    flex: 1;
+    display: flex;
+    overflow-y: auto; /* Scroll vertical principal */
+    position: relative;
+    /* Scrollbar Customizada */
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-surface-hover) var(--bg-app);
+}
+
+.calendar-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+.calendar-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--bg-surface-hover);
+    border-radius: 4px;
+}
+
+/* Coluna de Tempo (Labels) */
+.time-column {
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+    background-color: var(--bg-app);
+    border-right: 1px solid var(--border-color);
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    /* Alinhamento dos labels com as linhas */
+    padding-top: 0; 
+}
+
+.time-label {
+    height: var(--hour-height);
+    display: flex;
+    align-items: start; /* O número fica no topo da linha */
+    justify-content: center;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    transform: translateY(-8px); /* Ajuste fino visual para centralizar na linha */
+}
+
+/* Grid da Semana */
+.week-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* 7 colunas iguais */
+    min-width: 800px; /* Garante que não esmague no mobile */
+}
+
+.day-column {
+    border-right: 1px solid var(--border-color);
+    position: relative;
+    /* Fundo com linhas de hora em hora */
+    background-image: linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
+    background-size: 100% var(--hour-height);
+    /* Altura total = 24 horas * 180px */
+    height: calc(24 * var(--hour-height)); 
+}
+
+.day-header {
+    position: sticky;
+    top: 0;
+    height: 40px;
+    background-color: var(--bg-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    border-bottom: 1px solid var(--border-color);
+    z-index: 4;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.day-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Blocos de Evento */
+.event-block {
+    position: absolute;
+    left: 4px;
+    right: 4px; /* Margem lateral */
+    border-radius: 4px;
+    padding: 6px;
+    font-size: 0.85rem;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    border-left: 4px solid rgba(255,255,255,0.3);
+    transition: transform 0.1s;
+    /* Flex para organizar conteúdo interno */
+    display: flex;
+    flex-direction: column;
+}
+
+.event-block:hover {
+    z-index: 10;
+    transform: scale(1.02);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.5);
+}
+
+.event-title {
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 2px;
+}
+
+.event-time {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+/* Variantes de Categoria */
+.event-block[data-category="work"] { background-color: rgba(68, 138, 255, 0.25); border-left-color: var(--cat-work); }
+.event-block[data-category="personal"] { background-color: rgba(105, 240, 174, 0.25); border-left-color: var(--cat-personal); }
+.event-block[data-category="health"] { background-color: rgba(255, 64, 129, 0.25); border-left-color: var(--cat-health); }
+.event-block[data-category="study"] { background-color: rgba(255, 215, 64, 0.25); border-left-color: var(--cat-study); }
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.modal.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.modal-content {
+    background-color: var(--bg-surface);
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid var(--border-color);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.close-btn {
+    font-size: 1.5rem;
+    background: none;
+    color: var(--text-secondary);
+    padding: 0;
+}
+
+/* Formulário do Modal */
+.form-group {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.4rem;
+}
+
+input, select {
+    background-color: var(--bg-app);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.6rem;
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+}
+
+input:focus, select:focus {
+    border-color: var(--primary-color);
+}
+
+/* Sub-tasks no Modal */
+.sub-tasks-section {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.sub-task-input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.sub-tasks-list {
+    list-style: none;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.sub-task-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: var(--bg-app);
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    justify-content: space-between;
+}
+
+.sub-task-item.completed span {
+    text-decoration: line-through;
+    opacity: 0.5;
+}
+
+.modal-footer {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+/* Responsividade Mobile */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.5rem;
+    }
+    .modal-content {
+        padding: 1rem;
+    }
+    /* Permite scroll horizontal na grade semanal em telas pequenas */
+    .calendar-wrapper {
+        overflow-x: auto;
+    }
+}

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda Semanal Interativa</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="app-header">
+            <h1 class="app-title">WEEKLY PLANNER</h1>
+            <button id="btn-add-event" class="btn-primary">+ Nova Atividade</button>
+        </header>
+
+        <main class="calendar-wrapper">
+            <div class="time-column" id="time-labels">
+                </div>
+
+            <div class="week-grid" id="week-grid">
+                <div class="day-column" data-day="0">
+                    <div class="day-header">SEG</div>
+                    <div class="day-content"></div>
+                </div>
+                <div class="day-column" data-day="1">
+                    <div class="day-header">TER</div>
+                    <div class="day-content"></div>
+                </div>
+                <div class="day-column" data-day="2">
+                    <div class="day-header">QUA</div>
+                    <div class="day-content"></div>
+                </div>
+                <div class="day-column" data-day="3">
+                    <div class="day-header">QUI</div>
+                    <div class="day-content"></div>
+                </div>
+                <div class="day-column" data-day="4">
+                    <div class="day-header">SEX</div>
+                    <div class="day-content"></div>
+                </div>
+                <div class="day-column" data-day="5">
+                    <div class="day-header">SÁB</div>
+                    <div class="day-content"></div>
+                </div>
+                <div class="day-column" data-day="6">
+                    <div class="day-header">DOM</div>
+                    <div class="day-content"></div>
+                </div>
+                
+                </div>
+        </main>
+    </div>
+
+    <div id="event-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Nova Atividade</h2>
+                <button id="btn-close-modal" class="close-btn">&times;</button>
+            </div>
+            
+            <form id="event-form">
+                <input type="hidden" id="event-id">
+                
+                <div class="form-group">
+                    <label for="title">Título</label>
+                    <input type="text" id="title" placeholder="Ex: Treino de Peito" required autocomplete="off">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="day-select">Dia da Semana</label>
+                        <select id="day-select" required>
+                            <option value="0">Segunda-feira</option>
+                            <option value="1">Terça-feira</option>
+                            <option value="2">Quarta-feira</option>
+                            <option value="3">Quinta-feira</option>
+                            <option value="4">Sexta-feira</option>
+                            <option value="5">Sábado</option>
+                            <option value="6">Domingo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Categoria</label>
+                        <select id="category">
+                            <option value="work">Trabalho</option>
+                            <option value="personal">Pessoal</option>
+                            <option value="health">Saúde</option>
+                            <option value="study">Estudo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="start-time">Início</label>
+                        <input type="time" id="start-time" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="end-time">Fim</label>
+                        <input type="time" id="end-time" required>
+                    </div>
+                </div>
+
+                <div class="sub-tasks-section">
+                    <label>Sub-atividades (Checklist)</label>
+                    <div class="sub-task-input-wrapper">
+                        <select id="sub-task-type">
+                            <option value="Deslocamento">Deslocamento</option>
+                            <option value="Lanche">Lanche</option>
+                            <option value="Almoço">Almoço</option>
+                            <option value="Saúde">Saúde</option>
+                            <option value="Serviços">Serviço</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                        <button type="button" id="btn-add-subtask" class="btn-secondary">Adicionar Item</button>
+                    </div>
+                    <ul id="sub-tasks-list" class="sub-tasks-list">
+                        </ul>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" id="btn-delete-event" class="btn-danger hidden">Excluir</button>
+                    <button type="submit" class="btn-primary">Salvar Atividade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
