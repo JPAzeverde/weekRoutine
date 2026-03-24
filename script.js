@@ -1,233 +1,356 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // --- Configurações e Constantes ---
-    const PIXELS_PER_MINUTE = 3;
-    const APP_KEY = 'weeklyPlannerEvents'; // Chave para o LocalStorage
-
-    // --- Estado Global ---
-    let events = JSON.parse(localStorage.getItem(APP_KEY)) || [];
-    let currentEditingId = null; // null = criando novo, ID = editando
-    let tempSubtasks = []; // Armazena sub-tarefas enquanto o modal está aberto
-
-    // --- Elementos do DOM ---
-    const modal = document.getElementById('event-modal');
-    const form = document.getElementById('event-form');
-    const btnAddEvent = document.getElementById('btn-add-event');
-    const btnCloseModal = document.getElementById('btn-close-modal');
-    const btnDeleteEvent = document.getElementById('btn-delete-event');
-    const btnAddSubtask = document.getElementById('btn-add-subtask');
-    const subTasksListEl = document.getElementById('sub-tasks-list');
-    
-    // --- Inicialização ---
-    initTimeLabels();
-    renderEvents();
-
-    // --- Funções de Renderização Auxiliares ---
-
-    // Gera os rótulos de hora na lateral (00:00 - 23:00)
-    function initTimeLabels() {
-        const timeColumn = document.getElementById('time-labels');
-        timeColumn.innerHTML = '';
-        
-        for (let i = 0; i < 24; i++) {
-            const label = document.createElement('div');
-            label.className = 'time-label';
-            // Formata 0h, 1h... 23h
-            label.textContent = `${i.toString().padStart(2, '0')}:00`;
-            timeColumn.appendChild(label);
-        }
-    }
-
-    // Converte hora "HH:MM" para minutos totais do dia (0-1439)
-    function timeToMinutes(timeStr) {
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        return (hours * 60) + minutes;
-    }
-
-    // --- Motor de Renderização de Eventos ---
-    function renderEvents() {
-        // Limpa eventos atuais do DOM
-        document.querySelectorAll('.day-content').forEach(col => col.innerHTML = '');
-
-        events.forEach(event => {
-            const startMin = timeToMinutes(event.start);
-            const endMin = timeToMinutes(event.end);
-            const duration = endMin - startMin;
-
-            if (duration <= 0) return; // Proteção contra horários inválidos
-
-            // Cálculos Visuais
-            const topPosition = startMin * PIXELS_PER_MINUTE;
-            const height = duration * PIXELS_PER_MINUTE;
-
-            // Criação do Elemento
-            const eventEl = document.createElement('div');
-            eventEl.className = 'event-block';
-            eventEl.dataset.category = event.category;
-            eventEl.style.top = `${topPosition}px`;
-            eventEl.style.height = `${height}px`;
-
-            // Conteúdo Interno
-            // Conta sub-tarefas concluídas
-            const completedSubs = event.subtasks ? event.subtasks.filter(s => s.completed).length : 0;
-            const totalSubs = event.subtasks ? event.subtasks.length : 0;
-            const subTaskIndicator = totalSubs > 0 ? ` (${completedSubs}/${totalSubs})` : '';
-
-            eventEl.innerHTML = `
-                <div class="event-title">${event.title}${subTaskIndicator}</div>
-                <div class="event-time">${event.start} - ${event.end}</div>
-            `;
-
-            // Evento de Clique para Editar
-            eventEl.addEventListener('click', (e) => {
-                e.stopPropagation(); // Evita bugs de clique
-                openModal(event);
-            });
-
-            // Inserir na coluna correta
-            const dayColumn = document.querySelector(`.day-column[data-day="${event.day}"] .day-content`);
-            if (dayColumn) {
-                dayColumn.appendChild(eventEl);
-            }
-        });
-    }
-
-    // --- Manipulação do Modal ---
-
-    function openModal(event = null) {
-        modal.classList.remove('hidden');
-        
-        if (event) {
-            // Modo Edição
-            document.getElementById('modal-title').innerText = "Editar Atividade";
-            currentEditingId = event.id;
-            document.getElementById('title').value = event.title;
-            document.getElementById('day-select').value = event.day;
-            document.getElementById('category').value = event.category;
-            document.getElementById('start-time').value = event.start;
-            document.getElementById('end-time').value = event.end;
-            
-            // Carregar sub-tarefas
-            tempSubtasks = event.subtasks ? JSON.parse(JSON.stringify(event.subtasks)) : [];
-            
-            btnDeleteEvent.classList.remove('hidden');
-        } else {
-            // Modo Criação
-            document.getElementById('modal-title').innerText = "Nova Atividade";
-            currentEditingId = null;
-            form.reset();
-            tempSubtasks = [];
-            btnDeleteEvent.classList.add('hidden');
-        }
-        renderSubtasksInModal();
-    }
-
-    function closeModal() {
-        modal.classList.add('hidden');
-    }
-
-    // --- Lógica de Sub-tarefas no Modal ---
-
-    function renderSubtasksInModal() {
-        subTasksListEl.innerHTML = '';
-        tempSubtasks.forEach((sub, index) => {
-            const li = document.createElement('li');
-            li.className = `sub-task-item ${sub.completed ? 'completed' : ''}`;
-            
-            li.innerHTML = `
-                <span style="cursor:pointer">${sub.name}</span>
-                <button type="button" class="btn-danger" style="padding: 2px 6px; font-size: 0.7rem;">X</button>
-            `;
-
-            // Toggle Complete ao clicar no texto
-            li.querySelector('span').addEventListener('click', () => {
-                tempSubtasks[index].completed = !tempSubtasks[index].completed;
-                renderSubtasksInModal();
-            });
-
-            // Remover item
-            li.querySelector('button').addEventListener('click', () => {
-                tempSubtasks.splice(index, 1);
-                renderSubtasksInModal();
-            });
-
-            subTasksListEl.appendChild(li);
-        });
-    }
-
-    btnAddSubtask.addEventListener('click', () => {
-        const typeSelect = document.getElementById('sub-task-type');
-        const newItem = {
-            name: typeSelect.value, // Pega o valor do select (Deslocamento, Alimentação...)
-            completed: false
+class OrganizadorSemanal {
+    constructor() {
+        this.atividades = this.carregarAtividades();
+        this.horarios = this.gerarHorarios();
+        this.dias = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'];
+        this.diasNomes = {
+            'segunda': 'Segunda',
+            'terca': 'Terça',
+            'quarta': 'Quarta',
+            'quinta': 'Quinta',
+            'sexta': 'Sexta',
+            'sabado': 'Sábado',
+            'domingo': 'Domingo'
         };
-        tempSubtasks.push(newItem);
-        renderSubtasksInModal();
-    });
-
-    // --- Listeners de Eventos ---
-
-    btnAddEvent.addEventListener('click', () => openModal());
-    btnCloseModal.addEventListener('click', closeModal);
+        
+        this.init();
+    }
     
-    // Fechar modal clicando fora
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
-
-    // Salvar (Criar ou Atualizar)
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const title = document.getElementById('title').value;
-        const day = document.getElementById('day-select').value;
-        const category = document.getElementById('category').value;
-        const start = document.getElementById('start-time').value;
-        const end = document.getElementById('end-time').value;
-
-        // Validação simples de tempo
-        if (timeToMinutes(end) <= timeToMinutes(start)) {
-            alert('O horário de fim deve ser maior que o início.');
+    gerarHorarios() {
+        const horarios = [];
+        for (let i = 0; i < 24; i++) {
+            const hora = i.toString().padStart(2, '0');
+            horarios.push(`${hora}:00`);
+        }
+        return horarios;
+    }
+    
+    carregarAtividades() {
+        const salvas = localStorage.getItem('atividadesSemanais');
+        
+        if (!salvas) {
+            if (typeof CONFIG !== 'undefined') {
+                const tarefasIniciais = getTarefasConfiguradas();
+                this.salvarAtividades(tarefasIniciais);
+                return tarefasIniciais;
+            }
+            return [];
+        }
+        
+        return JSON.parse(salvas);
+    }
+    
+    salvarAtividades(atividades = null) {
+        if (atividades) {
+            localStorage.setItem('atividadesSemanais', JSON.stringify(atividades));
+        } else {
+            localStorage.setItem('atividadesSemanais', JSON.stringify(this.atividades));
+        }
+    }
+    
+    init() {
+        this.renderizarGrade();
+        this.adicionarEventos();
+        this.abrirModal();
+    }
+    
+    extrairHora(horarioCompleto) {
+        return horarioCompleto.split(':')[0] + ':00';
+    }
+    
+    horaParaNumero(horaStr) {
+        const [hora, minuto] = horaStr.split(':');
+        return parseInt(hora) + (parseInt(minuto) / 60);
+    }
+    
+    // Calcular o horário de início para uma célula específica
+    calcularInicioNaCelula(atividade, horaCelula) {
+        const horaInicioNum = this.horaParaNumero(atividade.horaInicio);
+        const horaCelulaNum = this.horaParaNumero(horaCelula);
+        
+        // Se a atividade começa nesta célula, retorna o horário de início real
+        if (horaCelulaNum <= horaInicioNum && horaCelulaNum + 1 > horaInicioNum) {
+            return atividade.horaInicio;
+        }
+        
+        // Se a atividade começou antes, retorna o início da célula
+        return horaCelula;
+    }
+    
+    // Calcular o horário de término para uma célula específica
+    calcularTerminoNaCelula(atividade, horaCelula) {
+        const horaFimNum = this.horaParaNumero(atividade.horaFim);
+        const horaCelulaNum = this.horaParaNumero(horaCelula);
+        const proximaHora = horaCelulaNum + 1;
+        
+        // Se a atividade termina nesta célula, retorna o horário de término real
+        if (horaFimNum <= proximaHora && horaFimNum > horaCelulaNum) {
+            return atividade.horaFim;
+        }
+        
+        // Se a atividade continua, retorna o final da célula
+        return `${Math.floor(proximaHora).toString().padStart(2, '0')}:00`;
+    }
+    
+    // Verificar se a atividade ocupa a célula inteira (da hora cheia à próxima hora cheia)
+    isCelulaCompleta(atividade, horaCelula) {
+        const inicioNaCelula = this.calcularInicioNaCelula(atividade, horaCelula);
+        const terminoNaCelula = this.calcularTerminoNaCelula(atividade, horaCelula);
+        const proximaHora = `${(parseInt(horaCelula.split(':')[0]) + 1).toString().padStart(2, '0')}:00`;
+        
+        // Verifica se ocupa do início exato da célula até o final exato
+        return inicioNaCelula === horaCelula && terminoNaCelula === proximaHora;
+    }
+    
+    // Verificar se uma atividade cobre esta célula
+    atividadeCobreCelula(atividade, horaCelula) {
+        const horaInicioNum = this.horaParaNumero(atividade.horaInicio);
+        const horaFimNum = this.horaParaNumero(atividade.horaFim);
+        const horaCelulaNum = this.horaParaNumero(horaCelula);
+        const proximaHora = horaCelulaNum + 1;
+        
+        // A atividade cobre esta célula se há intersecção entre [horaCelula, proximaHora] e [horaInicio, horaFim]
+        return (horaCelulaNum < horaFimNum && proximaHora > horaInicioNum);
+    }
+    
+    renderizarGrade() {
+        const gradeContainer = document.getElementById('gradeHorarios');
+        gradeContainer.innerHTML = '';
+        
+        this.horarios.forEach(hora => {
+            // Linha de horário
+            const horarioLabel = document.createElement('div');
+            horarioLabel.className = 'horario-label';
+            horarioLabel.textContent = hora;
+            gradeContainer.appendChild(horarioLabel);
+            
+            // Células para cada dia
+            this.dias.forEach(dia => {
+                const celula = document.createElement('div');
+                celula.className = 'celula';
+                celula.setAttribute('data-dia', dia);
+                celula.setAttribute('data-hora', hora);
+                
+                // Encontrar todas as atividades que cobrem esta célula
+                const atividadesAqui = this.atividades.filter(atividade => {
+                    return atividade.dia === dia && this.atividadeCobreCelula(atividade, hora);
+                });
+                
+                // Ordenar atividades por horário de início
+                atividadesAqui.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
+                
+                atividadesAqui.forEach(atividade => {
+                    const inicioNaCelula = this.calcularInicioNaCelula(atividade, hora);
+                    const terminoNaCelula = this.calcularTerminoNaCelula(atividade, hora);
+                    const celulaCompleta = this.isCelulaCompleta(atividade, hora);
+                    const atividadeElement = this.criarElementoAtividade(atividade, inicioNaCelula, terminoNaCelula, celulaCompleta);
+                    celula.appendChild(atividadeElement);
+                });
+                
+                gradeContainer.appendChild(celula);
+            });
+        });
+    }
+    
+    criarElementoAtividade(atividade, inicioNaCelula, terminoNaCelula, celulaCompleta) {
+        const div = document.createElement('div');
+        div.className = 'atividade';
+        div.style.background = `${atividade.cor}20`;
+        div.style.borderLeftColor = atividade.cor;
+        div.setAttribute('data-id', atividade.id);
+        
+        // Se a atividade ocupa a célula inteira, aplicar altura total
+        if (celulaCompleta) {
+            div.style.height = '100%';
+            div.style.display = 'flex';
+            div.style.flexDirection = 'column';
+            div.style.justifyContent = 'center';
+            div.style.minHeight = '70px';
+        }
+        
+        // Verificar se este é o início real da atividade
+        const ehInicioReal = inicioNaCelula === atividade.horaInicio;
+        
+        div.innerHTML = `
+            <div class="atividade-nome" style="">${ehInicioReal ? ' ' : ' '}${this.escapeHtml(atividade.nome)}</div>
+            <div class="atividade-horario">${inicioNaCelula} - ${terminoNaCelula}</div>
+            ${ehInicioReal ? `
+                <div class="atividade-acoes">
+                    <button class="btn-editar" onclick="organizador.editarAtividade('${atividade.id}')">✎</button>
+                    <button class="btn-danger" onclick="organizador.removerAtividade('${atividade.id}')">×</button>
+                </div>
+            ` : ''}
+        `;
+        
+        return div;
+    }
+    
+    escapeHtml(texto) {
+        const div = document.createElement('div');
+        div.textContent = texto;
+        return div.innerHTML;
+    }
+    
+    adicionarEventos() {
+        document.getElementById('btnAdicionar').onclick = () => this.mostrarModal();
+        document.getElementById('btnLimpar').onclick = () => this.limparTudo();
+        document.getElementById('btnCancelar').onclick = () => this.fecharModal();
+        document.querySelector('.fechar').onclick = () => this.fecharModal();
+        
+        window.onclick = (event) => {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                this.fecharModal();
+            }
+        };
+        
+        document.getElementById('formAtividade').onsubmit = (e) => {
+            e.preventDefault();
+            this.salvarAtividade();
+        };
+    }
+    
+    abrirModal() {
+        // Função vazia para compatibilidade
+    }
+    
+    mostrarModal(atividadeId = null) {
+        const modal = document.getElementById('modal');
+        const form = document.getElementById('formAtividade');
+        const titulo = modal.querySelector('h2');
+        
+        if (atividadeId) {
+            const atividade = this.atividades.find(a => a.id === atividadeId);
+            if (atividade) {
+                titulo.textContent = 'Editar Atividade';
+                document.getElementById('nomeAtividade').value = atividade.nome;
+                document.getElementById('diaSemana').value = atividade.dia;
+                document.getElementById('horaInicio').value = atividade.horaInicio;
+                document.getElementById('horaFim').value = atividade.horaFim;
+                document.getElementById('corAtividade').value = atividade.cor;
+                form.setAttribute('data-editing', atividadeId);
+            }
+        } else {
+            titulo.textContent = 'Adicionar Atividade';
+            form.reset();
+            document.getElementById('corAtividade').value = '#4CAF50';
+            form.removeAttribute('data-editing');
+        }
+        
+        modal.style.display = 'block';
+    }
+    
+    fecharModal() {
+        const modal = document.getElementById('modal');
+        modal.style.display = 'none';
+        document.getElementById('formAtividade').reset();
+    }
+    
+    salvarAtividade() {
+        const nome = document.getElementById('nomeAtividade').value.trim();
+        const dia = document.getElementById('diaSemana').value;
+        const horaInicio = document.getElementById('horaInicio').value;
+        const horaFim = document.getElementById('horaFim').value;
+        const cor = document.getElementById('corAtividade').value;
+        const form = document.getElementById('formAtividade');
+        const editingId = form.getAttribute('data-editing');
+        
+        if (!nome || !horaInicio || !horaFim) {
+            alert('Por favor, preencha todos os campos!');
             return;
         }
-
-        const eventData = {
-            id: currentEditingId || Date.now().toString(),
-            title,
-            day,
-            category,
-            start,
-            end,
-            subtasks: tempSubtasks
-        };
-
-        if (currentEditingId) {
-            // Atualizar existente
-            const index = events.findIndex(ev => ev.id === currentEditingId);
-            if (index !== -1) events[index] = eventData;
-        } else {
-            // Criar novo
-            events.push(eventData);
+        
+        if (horaInicio >= horaFim) {
+            alert('O horário de início deve ser anterior ao horário de término!');
+            return;
         }
-
-        saveToLocalStorage();
-        renderEvents();
-        closeModal();
-    });
-
-    // Excluir Evento
-    btnDeleteEvent.addEventListener('click', () => {
-        if (currentEditingId) {
-            if(confirm('Tem certeza que deseja excluir esta atividade?')) {
-                events = events.filter(ev => ev.id !== currentEditingId);
-                saveToLocalStorage();
-                renderEvents();
-                closeModal();
+        
+        // Verificar conflito de horário
+        const conflito = this.atividades.some(atividade => {
+            if (editingId && atividade.id === editingId) return false;
+            return atividade.dia === dia && 
+                   ((horaInicio >= atividade.horaInicio && horaInicio < atividade.horaFim) ||
+                    (horaFim > atividade.horaInicio && horaFim <= atividade.horaFim) ||
+                    (horaInicio <= atividade.horaInicio && horaFim >= atividade.horaFim));
+        });
+        
+        if (conflito) {
+            alert('Já existe uma atividade neste horário!');
+            return;
+        }
+        
+        if (editingId) {
+            // Editar atividade existente
+            const index = this.atividades.findIndex(a => a.id === editingId);
+            if (index !== -1) {
+                this.atividades[index] = {
+                    ...this.atividades[index],
+                    nome,
+                    dia,
+                    horaInicio,
+                    horaFim,
+                    cor
+                };
+            }
+        } else {
+            // Criar nova atividade
+            const novaAtividade = {
+                id: Date.now().toString(),
+                nome,
+                dia,
+                horaInicio,
+                horaFim,
+                cor
+            };
+            this.atividades.push(novaAtividade);
+        }
+        
+        this.salvarAtividades();
+        this.renderizarGrade();
+        this.fecharModal();
+    }
+    
+    editarAtividade(id) {
+        this.mostrarModal(id);
+    }
+    
+    removerAtividade(id) {
+        if (confirm('Tem certeza que deseja remover esta atividade?')) {
+            this.atividades = this.atividades.filter(atividade => atividade.id !== id);
+            this.salvarAtividades();
+            this.renderizarGrade();
+        }
+    }
+    
+    limparTudo() {
+        if (confirm('Tem certeza que deseja limpar todas as atividades?')) {
+            this.atividades = [];
+            this.salvarAtividades();
+            this.renderizarGrade();
+        }
+    }
+    
+    resetarParaPadrao() {
+        if (confirm('Isso irá substituir todas as atividades atuais pelas atividades padrão. Continuar?')) {
+            if (typeof CONFIG !== 'undefined') {
+                const tarefasPadrao = getTarefasConfiguradas();
+                this.atividades = tarefasPadrao;
+                this.salvarAtividades();
+                this.renderizarGrade();
+                alert('Atividades resetadas para o padrão!');
             }
         }
-    });
-
-    // Persistência
-    function saveToLocalStorage() {
-        localStorage.setItem(APP_KEY, JSON.stringify(events));
     }
+}
+
+// Inicializar o organizador quando a página carregar
+let organizador;
+document.addEventListener('DOMContentLoaded', () => {
+    organizador = new OrganizadorSemanal();
 });
+
+window.resetarOrganizador = () => {
+    if (organizador) {
+        organizador.resetarParaPadrao();
+    }
+};

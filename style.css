@@ -1,30 +1,3 @@
-:root {
-    /* Paleta de Cores Dark Mode */
-    --bg-app: #121212;
-    --bg-surface: #1E1E1E;
-    --bg-surface-hover: #2C2C2C;
-    --text-primary: #E0E0E0;
-    --text-secondary: #A0A0A0;
-    --border-color: #333333;
-    
-    /* Cores de Destaque */
-    --primary-color: #7C4DFF; /* Roxo vibrante */
-    --primary-hover: #651FFF;
-    --danger-color: #FF5252;
-    
-    /* Cores de Categoria (Pastel/Neon suave para dark mode) */
-    --cat-work: #448AFF;      /* Azul */
-    --cat-personal: #69F0AE;  /* Verde */
-    --cat-health: #FF4081;    /* Rosa */
-    --cat-study: #FFD740;     /* Amarelo */
-
-    /* Dimensões Críticas */
-    --hour-height: 180px; /* 60 min * 3px */
-    --sidebar-width: 60px;
-    --header-height: 70px;
-}
-
-/* Reset e Base */
 * {
     margin: 0;
     padding: 0;
@@ -32,340 +5,319 @@
 }
 
 body {
-    background-color: var(--bg-app);
-    color: var(--text-primary);
-    font-family: 'Inter', sans-serif;
-    height: 100vh;
-    overflow: hidden; /* App estilo desktop */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #121212;
+    min-height: 100vh;
+    padding: 20px;
 }
 
-h1, h2, h3, .day-header {
-    font-family: 'Bebas Neue', sans-serif;
-    letter-spacing: 1px;
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: #1e1e1e; /* Cinza escuro elevado */
+    border-radius: 15px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
 }
 
-/* Container Principal */
-.app-container {
+header {
+    background: #252525;
+    color: white;
+    padding: 20px 30px;
     display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-/* Header */
-.app-header {
-    height: var(--header-height);
-    background-color: var(--bg-surface);
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
     justify-content: space-between;
-    padding: 0 2rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 10;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
-.app-title {
-    font-size: 2rem;
-    background: linear-gradient(45deg, var(--primary-color), #00BCD4);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* Botões */
-button {
-    cursor: pointer;
-    border: none;
-    font-family: 'Inter', sans-serif;
+header h1 {
+    font-size: 1.8rem;
     font-weight: 600;
-    border-radius: 6px;
-    transition: all 0.2s ease;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 0.6rem 1.2rem;
-}
-
-.btn-primary:hover {
-    background-color: var(--primary-hover);
-    transform: translateY(-1px);
+    background: #ffffff; /* Branco para destaque máximo no monocromático */
+    color: #121212;
 }
 
 .btn-secondary {
-    background-color: var(--bg-surface-hover);
-    color: var(--text-primary);
-    padding: 0.4rem 0.8rem;
-    font-size: 0.9rem;
-    border: 1px solid var(--border-color);
+    background: #333333;
+    color: #ffffff;
 }
 
 .btn-danger {
-    background-color: transparent;
-    border: 1px solid var(--danger-color);
-    color: var(--danger-color);
-    padding: 0.6rem 1.2rem;
+    background: #444; /* Mantendo monocromático, apenas mais escuro */
+    color: #ff5555; /* Um toque sutil de cor para erro, ou use #888 para 100% mono */
+    padding: 4px 8px;
+    font-size: 12px;
+    border: 1px solid #555;
 }
 
-.btn-danger:hover {
-    background-color: var(--danger-color);
+.btn-editar {
+    background: #444;
+    color: #ffffff;
+    padding: 4px 8px;
+    font-size: 12px;
+    margin-right: 5px;
+    border: 1px solid #555;
+}
+
+.semana-grid {
+    display: grid;
+    grid-template-columns: 100px repeat(7, 1fr);
+    background: #252525;
+    border-bottom: 2px solid #333;
+    font-weight: bold;
+}
+
+.horario-header, .dia-header {
+    padding: 15px;
+    text-align: center;
+    border-right: 1px solid #333;
+    color: white;
+    text-transform: uppercase;
+
+}
+
+.dia-header {
+    background: #2d2d2d;
     color: white;
 }
 
-/* Área do Calendário */
-.calendar-wrapper {
-    flex: 1;
-    display: flex;
-    overflow-y: auto; /* Scroll vertical principal */
-    position: relative;
-    /* Scrollbar Customizada */
-    scrollbar-width: thin;
-    scrollbar-color: var(--bg-surface-hover) var(--bg-app);
-}
-
-.calendar-wrapper::-webkit-scrollbar {
-    width: 8px;
-}
-.calendar-wrapper::-webkit-scrollbar-thumb {
-    background-color: var(--bg-surface-hover);
-    border-radius: 4px;
-}
-
-/* Coluna de Tempo (Labels) */
-.time-column {
-    width: var(--sidebar-width);
-    flex-shrink: 0;
-    background-color: var(--bg-app);
-    border-right: 1px solid var(--border-color);
-    position: sticky;
-    left: 0;
-    z-index: 5;
-    /* Alinhamento dos labels com as linhas */
-    padding-top: 0; 
-}
-
-.time-label {
-    height: var(--hour-height);
-    display: flex;
-    align-items: start; /* O número fica no topo da linha */
-    justify-content: center;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    transform: translateY(-8px); /* Ajuste fino visual para centralizar na linha */
-}
-
-/* Grid da Semana */
-.week-grid {
-    flex: 1;
+.grade-horarios {
     display: grid;
-    grid-template-columns: repeat(7, 1fr); /* 7 colunas iguais */
-    min-width: 800px; /* Garante que não esmague no mobile */
+    grid-template-columns: 100px repeat(7, 1fr);
+    background: #1e1e1e;
 }
 
-.day-column {
-    border-right: 1px solid var(--border-color);
+.horario-linha {
+    display: contents;
+}
+
+.horario-label {
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid #e9ecef;
+    border-right: 1px solid #e9ecef;
+    background: #252525;
+    font-size: 12px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.celula {
+    min-height: 50px;
+    padding: 8px;
+    border-bottom: 1px solid #2a2a2a;
+    border-right: 1px solid #2a2a2a;
     position: relative;
-    /* Fundo com linhas de hora em hora */
-    background-image: linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
-    background-size: 100% var(--hour-height);
-    /* Altura total = 24 horas * 180px */
-    height: calc(24 * var(--hour-height)); 
+    background: #1e1e1e;
 }
 
-.day-header {
-    position: sticky;
-    top: 0;
-    height: 40px;
-    background-color: var(--bg-surface);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    border-bottom: 1px solid var(--border-color);
-    z-index: 4;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.day-content {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-
-/* Blocos de Evento */
-.event-block {
-    position: absolute;
-    left: 4px;
-    right: 4px; /* Margem lateral */
-    border-radius: 4px;
-    padding: 6px;
-    font-size: 0.85rem;
-    overflow: hidden;
+.atividade {
+    background: #333333;
+    border-left: 4px solid #ffffff;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    border-left: 4px solid rgba(255,255,255,0.3);
-    transition: transform 0.1s;
-    /* Flex para organizar conteúdo interno */
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    word-wrap: break-word;
+    color: #eee;
+
+}
+
+.atividade:hover {
+    background: #444;
+    transform: translateX(2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.atividade-nome {
+    font-weight: bold;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.atividade-horario {
+    font-size: 10px;
+    color: #aaa;
+}
+
+.atividade-acoes {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: none;
+    gap: 4px;
+}
+
+.atividade:hover .atividade-acoes {
     display: flex;
-    flex-direction: column;
 }
 
-.event-block:hover {
-    z-index: 10;
-    transform: scale(1.02);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.5);
-}
-
-.event-title {
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 2px;
-}
-
-.event-time {
-    font-size: 0.75rem;
-    opacity: 0.8;
-}
-
-/* Variantes de Categoria */
-.event-block[data-category="work"] { background-color: rgba(68, 138, 255, 0.25); border-left-color: var(--cat-work); }
-.event-block[data-category="personal"] { background-color: rgba(105, 240, 174, 0.25); border-left-color: var(--cat-personal); }
-.event-block[data-category="health"] { background-color: rgba(255, 64, 129, 0.25); border-left-color: var(--cat-health); }
-.event-block[data-category="study"] { background-color: rgba(255, 215, 64, 0.25); border-left-color: var(--cat-study); }
-
-/* Modal Styles */
+/* Modal */
 .modal {
+    display: none;
     position: fixed;
-    top: 0;
+    z-index: 1000;
     left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.7);
-    backdrop-filter: blur(4px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-    opacity: 1;
-    transition: opacity 0.3s;
-}
-
-.modal.hidden {
-    display: none;
-    opacity: 0;
+    background-color: rgba(0,0,0,0.8);
+    animation: fadeIn 0.3s;
 }
 
 .modal-content {
-    background-color: var(--bg-surface);
-    padding: 2rem;
-    border-radius: 12px;
+    background-color: #1e1e1e;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 15px;
     width: 90%;
     max-width: 500px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    animation: slideDown 0.3s;
+    color: #ffffff;
 }
 
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
+.modal-content h2 {
+    background: #252525;
+    color: white;
+    padding: 20px;
+    border-radius: 15px 15px 0 0;
+    margin: 0;
 }
 
-.close-btn {
-    font-size: 1.5rem;
-    background: none;
-    color: var(--text-secondary);
-    padding: 0;
+.fechar {
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    position: relative;
+    z-index: 1;
+    margin-right: 20px;
+    margin-top: 15px;
 }
 
-/* Formulário do Modal */
+.fechar:hover {
+    color: #888;
+}
+
 .form-group {
-    margin-bottom: 1rem;
-    display: flex;
-    flex-direction: column;
+    padding: 15px 20px;
+    border-bottom: 1px solid #333;
 }
 
-.form-row {
-    display: flex;
-    gap: 1rem;
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #bbb;
 }
 
-.form-row .form-group {
-    flex: 1;
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+    
 }
 
-label {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.4rem;
-}
-
-input, select {
-    background-color: var(--bg-app);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 0.6rem;
-    border-radius: 4px;
-    font-family: 'Inter', sans-serif;
+.form-group input:focus, .form-group select:focus {
     outline: none;
+    border-color: #1a1a1a;
 }
 
-input:focus, select:focus {
-    border-color: var(--primary-color);
-}
-
-/* Sub-tasks no Modal */
-.sub-tasks-section {
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
-}
-
-.sub-task-input-wrapper {
+.form-actions {
+    padding: 20px;
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.sub-tasks-list {
-    list-style: none;
-    max-height: 150px;
-    overflow-y: auto;
-}
-
-.sub-task-item {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem;
-    background-color: var(--bg-app);
-    margin-bottom: 0.5rem;
-    border-radius: 4px;
-    justify-content: space-between;
-}
-
-.sub-task-item.completed span {
-    text-decoration: line-through;
-    opacity: 0.5;
-}
-
-.modal-footer {
-    margin-top: 2rem;
-    display: flex;
+    gap: 10px;
     justify-content: flex-end;
-    gap: 1rem;
 }
 
-/* Responsividade Mobile */
+/* Animações */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #121212;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}
+
+/* Responsividade */
 @media (max-width: 768px) {
-    .header h1 {
-        font-size: 1.5rem;
+    .semana-grid, .grade-horarios {
+        font-size: 12px;
     }
-    .modal-content {
-        padding: 1rem;
+    
+    .horario-label, .celula {
+        min-height: 60px;
     }
-    /* Permite scroll horizontal na grade semanal em telas pequenas */
-    .calendar-wrapper {
-        overflow-x: auto;
+    
+    .atividade {
+        font-size: 10px;
+    }
+    
+    header h1 {
+        font-size: 1.2rem;
+    }
+    
+    button {
+        padding: 6px 12px;
+        font-size: 12px;
     }
 }
