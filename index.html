@@ -11,6 +11,7 @@
         <header>
             <h1>Organizador Semanal</h1>
             <div class="controls">
+                <button id="btnAjuda" class="btn-ajuda">Como usar</button>
                 <button id="btnAdicionar" class="btn-primary">+ Nova Atividade</button>
                 <button id="btnLimpar" class="btn-secondary">Limpar Tudo</button>
             </div>
@@ -30,8 +31,6 @@
         <div id="gradeHorarios" class="grade-horarios"></div>
     </div>
 
-
-    
     <!-- Modal para adicionar/editar atividade -->
     <div id="modal" class="modal">
         <div class="modal-content">
@@ -79,7 +78,65 @@
         </div>
     </div>
 
-    <script src="tasks.js"></script>
+    <!-- Modal de Ajuda -->
+    <div id="modalAjuda" class="modal">
+        <div class="modal-content modal-ajuda">
+            <a class="fechar-ajuda">&times;</a>
+            <h2>Como usar o Organizador Semanal</h2>
+            
+            <div class="ajuda-conteudo">
+                <div class="ajuda-secao">
+                    <h3>Adicionar Atividades</h3>
+                    <p>Clique no botão <strong>"+ Nova Atividade"</strong> para abrir o formulário de criação.</p>
+                    <ul>
+                        <li><strong>Nome:</strong> Digite o nome da atividade</li>
+                        <li><strong>Dia:</strong> Selecione o dia da semana</li>
+                        <li><strong>Horário:</strong> Defina o horário de início e término</li>
+                        <li><strong>Cor:</strong> Escolha uma cor para identificar a atividade</li>
+                    </ul>
+                </div>
+
+                <div class="ajuda-secao">
+                    <h3>Editar Atividades</h3>
+                    <p>Passe o mouse sobre qualquer atividade e clique no ícone <strong>✎</strong> para editar.</p>
+                    <p>Você pode alterar nome, horário, dia e cor da atividade.</p>
+                </div>
+
+                <div class="ajuda-secao">
+                    <h3>Remover Atividades</h3>
+                    <p>Passe o mouse sobre a atividade e clique no ícone <strong>×</strong> para remover.</p>
+                    <p>Use o botão <strong>"Limpar Tudo"</strong> para remover todas as atividades de uma vez.</p>
+                </div>
+
+                <div class="ajuda-secao">
+                    <h3>Visualização</h3>
+                    <ul>
+                        <li>Cada atividade tem sua cor personalizada para fácil identificação</li>
+                    </ul>
+                </div>
+
+                <div class="ajuda-secao">
+                    <h3>Salvamento Automático</h3>
+                    <p>Todas as suas atividades são salvas automaticamente no navegador. Você pode fechar a página e suas atividades continuarão aqui quando voltar!</p>
+                </div>
+
+                <div class="ajuda-secao">
+                    <h3>Horários Flexíveis</h3>
+                    <p>Você pode criar atividades em qualquer horário, com minutos específicos (ex: 12:30, 14:15). O sistema distribui automaticamente pelas células de hora em hora, mostrando os intervalos parciais.</p>
+                </div>
+
+                <div class="ajuda-dica">
+                    <strong>Dica:</strong> Use cores diferentes para categorizar suas atividades (trabalho, estudo, lazer, etc.) e organize melhor sua semana!
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" id="btnFecharAjuda" class="btn-primary">Voltar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

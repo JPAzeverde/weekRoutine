@@ -15,6 +15,16 @@ class OrganizadorSemanal {
         
         this.init();
     }
+
+    horaParaDecimal(horaStr) {
+        const [h, m] = horaStr.split(':');
+        return parseInt(h) + (parseInt(m) / 60);
+    }
+
+    horaParaMinutos(horaStr) {
+        const [h, m] = horaStr.split(':');
+        return parseInt(h) * 60 + parseInt(m);
+    }
     
     gerarHorarios() {
         const horarios = [];
@@ -63,53 +73,43 @@ class OrganizadorSemanal {
         return parseInt(hora) + (parseInt(minuto) / 60);
     }
     
-    // Calcular o horário de início para uma célula específica
     calcularInicioNaCelula(atividade, horaCelula) {
         const horaInicioNum = this.horaParaNumero(atividade.horaInicio);
         const horaCelulaNum = this.horaParaNumero(horaCelula);
         
-        // Se a atividade começa nesta célula, retorna o horário de início real
         if (horaCelulaNum <= horaInicioNum && horaCelulaNum + 1 > horaInicioNum) {
             return atividade.horaInicio;
         }
         
-        // Se a atividade começou antes, retorna o início da célula
         return horaCelula;
     }
     
-    // Calcular o horário de término para uma célula específica
     calcularTerminoNaCelula(atividade, horaCelula) {
         const horaFimNum = this.horaParaNumero(atividade.horaFim);
         const horaCelulaNum = this.horaParaNumero(horaCelula);
         const proximaHora = horaCelulaNum + 1;
         
-        // Se a atividade termina nesta célula, retorna o horário de término real
         if (horaFimNum <= proximaHora && horaFimNum > horaCelulaNum) {
             return atividade.horaFim;
         }
         
-        // Se a atividade continua, retorna o final da célula
         return `${Math.floor(proximaHora).toString().padStart(2, '0')}:00`;
     }
     
-    // Verificar se a atividade ocupa a célula inteira (da hora cheia à próxima hora cheia)
     isCelulaCompleta(atividade, horaCelula) {
         const inicioNaCelula = this.calcularInicioNaCelula(atividade, horaCelula);
         const terminoNaCelula = this.calcularTerminoNaCelula(atividade, horaCelula);
         const proximaHora = `${(parseInt(horaCelula.split(':')[0]) + 1).toString().padStart(2, '0')}:00`;
         
-        // Verifica se ocupa do início exato da célula até o final exato
         return inicioNaCelula === horaCelula && terminoNaCelula === proximaHora;
     }
     
-    // Verificar se uma atividade cobre esta célula
     atividadeCobreCelula(atividade, horaCelula) {
         const horaInicioNum = this.horaParaNumero(atividade.horaInicio);
         const horaFimNum = this.horaParaNumero(atividade.horaFim);
         const horaCelulaNum = this.horaParaNumero(horaCelula);
         const proximaHora = horaCelulaNum + 1;
         
-        // A atividade cobre esta célula se há intersecção entre [horaCelula, proximaHora] e [horaInicio, horaFim]
         return (horaCelulaNum < horaFimNum && proximaHora > horaInicioNum);
     }
     
@@ -117,33 +117,52 @@ class OrganizadorSemanal {
         const gradeContainer = document.getElementById('gradeHorarios');
         gradeContainer.innerHTML = '';
         
-        this.horarios.forEach(hora => {
-            // Linha de horário
+        // 1. Calcular a altura necessária para cada hora
+        const alturasPorHora = [];
+        for (let idx = 0; idx < this.horarios.length; idx++) {
+            const hora = this.horarios[idx];
+            let maxAtividadesNaHora = 0;
+            
+            for (const dia of this.dias) {
+                const atividadesNaCelula = this.atividades.filter(atividade => 
+                    atividade.dia === dia && this.atividadeCobreCelula(atividade, hora)
+                );
+                maxAtividadesNaHora = Math.max(maxAtividadesNaHora, atividadesNaCelula.length);
+            }
+            
+            // Altura base: 30px se não houver atividades; caso contrário, 90px por atividade
+            const altura = maxAtividadesNaHora === 0 ? 20 : 90 * maxAtividadesNaHora;
+            alturasPorHora.push(altura);
+        }
+        
+        // Aplicar grid-template-rows dinamicamente
+        const gridRows = alturasPorHora.map(h => `${h}px`).join(' ');
+        gradeContainer.style.gridTemplateRows = gridRows;
+        
+        // 2. Construir as células normalmente
+        this.horarios.forEach((hora, index) => {
             const horarioLabel = document.createElement('div');
             horarioLabel.className = 'horario-label';
             horarioLabel.textContent = hora;
             gradeContainer.appendChild(horarioLabel);
             
-            // Células para cada dia
             this.dias.forEach(dia => {
                 const celula = document.createElement('div');
                 celula.className = 'celula';
                 celula.setAttribute('data-dia', dia);
                 celula.setAttribute('data-hora', hora);
                 
-                // Encontrar todas as atividades que cobrem esta célula
                 const atividadesAqui = this.atividades.filter(atividade => {
                     return atividade.dia === dia && this.atividadeCobreCelula(atividade, hora);
                 });
                 
-                // Ordenar atividades por horário de início
                 atividadesAqui.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
                 
                 atividadesAqui.forEach(atividade => {
                     const inicioNaCelula = this.calcularInicioNaCelula(atividade, hora);
                     const terminoNaCelula = this.calcularTerminoNaCelula(atividade, hora);
                     const celulaCompleta = this.isCelulaCompleta(atividade, hora);
-                    const atividadeElement = this.criarElementoAtividade(atividade, inicioNaCelula, terminoNaCelula, celulaCompleta);
+                    const atividadeElement = this.criarElementoAtividade(atividade, inicioNaCelula, terminoNaCelula, celulaCompleta, hora);
                     celula.appendChild(atividadeElement);
                 });
                 
@@ -152,27 +171,33 @@ class OrganizadorSemanal {
         });
     }
     
-    criarElementoAtividade(atividade, inicioNaCelula, terminoNaCelula, celulaCompleta) {
+    criarElementoAtividade(atividade, inicioNaCelula, terminoNaCelula, celulaCompleta, horaCelula) {
         const div = document.createElement('div');
         div.className = 'atividade';
         div.style.background = `${atividade.cor}20`;
+
         div.style.borderLeftColor = atividade.cor;
+        
         div.setAttribute('data-id', atividade.id);
         
-        // Se a atividade ocupa a célula inteira, aplicar altura total
-        if (celulaCompleta) {
-            div.style.height = '100%';
-            div.style.display = 'flex';
-            div.style.flexDirection = 'column';
-            div.style.justifyContent = 'center';
-            div.style.minHeight = '70px';
-        }
+        // Cálculo da posição vertical e altura (percentuais relativos à célula)
+        const minutosCelula = this.horaParaMinutos(horaCelula);
+        const minutosInicio = this.horaParaMinutos(inicioNaCelula);
+        const minutosTermino = this.horaParaMinutos(terminoNaCelula);
         
-        // Verificar se este é o início real da atividade
+        let topPercent = ((minutosInicio - minutosCelula) / 60) * 100;
+        let heightPercent = ((minutosTermino - minutosInicio) / 60) * 100;
+        
+        topPercent = Math.max(0, Math.min(100, topPercent));
+        heightPercent = Math.max(2, Math.min(100, heightPercent));
+        
+        div.style.top = `${topPercent}%`;
+        div.style.height = `${heightPercent}%`;
+        
         const ehInicioReal = inicioNaCelula === atividade.horaInicio;
         
         div.innerHTML = `
-            <div class="atividade-nome" style="">${ehInicioReal ? ' ' : ' '}${this.escapeHtml(atividade.nome)}</div>
+            <div class="atividade-nome">${this.escapeHtml(atividade.nome)}</div>
             <div class="atividade-horario">${inicioNaCelula} - ${terminoNaCelula}</div>
             ${ehInicioReal ? `
                 <div class="atividade-acoes">
@@ -195,15 +220,42 @@ class OrganizadorSemanal {
         document.getElementById('btnAdicionar').onclick = () => this.mostrarModal();
         document.getElementById('btnLimpar').onclick = () => this.limparTudo();
         document.getElementById('btnCancelar').onclick = () => this.fecharModal();
-        document.querySelector('.fechar').onclick = () => this.fecharModal();
+        
+        const btnAjuda = document.getElementById('btnAjuda');
+        const modalAjuda = document.getElementById('modalAjuda');
+        const fecharAjuda = document.querySelector('.fechar-ajuda');
+        const btnFecharAjuda = document.getElementById('btnFecharAjuda');
+        
+        if (btnAjuda) {
+            btnAjuda.onclick = () => {
+                modalAjuda.style.display = 'block';
+            };
+        }
+        
+        if (fecharAjuda) {
+            fecharAjuda.onclick = () => {
+                modalAjuda.style.display = 'none';
+            };
+        }
+        
+        if (btnFecharAjuda) {
+            btnFecharAjuda.onclick = () => {
+                modalAjuda.style.display = 'none';
+            };
+        }
         
         window.onclick = (event) => {
             const modal = document.getElementById('modal');
+            const modalAjuda = document.getElementById('modalAjuda');
             if (event.target === modal) {
                 this.fecharModal();
             }
+            if (event.target === modalAjuda) {
+                modalAjuda.style.display = 'none';
+            }
         };
         
+        document.querySelector('.fechar').onclick = () => this.fecharModal();
         document.getElementById('formAtividade').onsubmit = (e) => {
             e.preventDefault();
             this.salvarAtividade();
@@ -265,7 +317,6 @@ class OrganizadorSemanal {
             return;
         }
         
-        // Verificar conflito de horário
         const conflito = this.atividades.some(atividade => {
             if (editingId && atividade.id === editingId) return false;
             return atividade.dia === dia && 
@@ -280,7 +331,6 @@ class OrganizadorSemanal {
         }
         
         if (editingId) {
-            // Editar atividade existente
             const index = this.atividades.findIndex(a => a.id === editingId);
             if (index !== -1) {
                 this.atividades[index] = {
@@ -293,7 +343,6 @@ class OrganizadorSemanal {
                 };
             }
         } else {
-            // Criar nova atividade
             const novaAtividade = {
                 id: Date.now().toString(),
                 nome,
@@ -343,7 +392,6 @@ class OrganizadorSemanal {
     }
 }
 
-// Inicializar o organizador quando a página carregar
 let organizador;
 document.addEventListener('DOMContentLoaded', () => {
     organizador = new OrganizadorSemanal();
